@@ -60,27 +60,27 @@ impl Default for Config {
 pub struct LogLevel(pub ffi::tidesdb_log_level_t);
 
 impl LogLevel {
-    pub const Debug: LogLevel = LogLevel(ffi::tidesdb_log_level_t::TDB_LOG_DEBUG);
-    pub const Info: LogLevel = LogLevel(ffi::tidesdb_log_level_t::TDB_LOG_INFO);
-    pub const Warn: LogLevel = LogLevel(ffi::tidesdb_log_level_t::TDB_LOG_WARN);
-    pub const Error: LogLevel = LogLevel(ffi::tidesdb_log_level_t::TDB_LOG_ERROR);
-    pub const Fatal: LogLevel = LogLevel(ffi::tidesdb_log_level_t::TDB_LOG_FATAL);
-    pub const None: LogLevel = LogLevel(ffi::tidesdb_log_level_t::TDB_LOG_NONE);
+    pub const DEBUG: LogLevel = LogLevel(ffi::tidesdb_log_level_t::TDB_LOG_DEBUG);
+    pub const INFO: LogLevel = LogLevel(ffi::tidesdb_log_level_t::TDB_LOG_INFO);
+    pub const WARN: LogLevel = LogLevel(ffi::tidesdb_log_level_t::TDB_LOG_WARN);
+    pub const ERROR: LogLevel = LogLevel(ffi::tidesdb_log_level_t::TDB_LOG_ERROR);
+    pub const FATAL: LogLevel = LogLevel(ffi::tidesdb_log_level_t::TDB_LOG_FATAL);
+    pub const NONE: LogLevel = LogLevel(ffi::tidesdb_log_level_t::TDB_LOG_NONE);
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct IsolationLevel(pub ffi::tidesdb_isolation_level_t);
 
 impl IsolationLevel {
-    pub const ReadUncommitted: IsolationLevel =
+    pub const READ_UNCOMMITTED: IsolationLevel =
         IsolationLevel(ffi::tidesdb_isolation_level_t::TDB_ISOLATION_READ_UNCOMMITTED);
-    pub const ReadCommitted: IsolationLevel =
+    pub const READ_COMMITTED: IsolationLevel =
         IsolationLevel(ffi::tidesdb_isolation_level_t::TDB_ISOLATION_READ_COMMITTED);
-    pub const RepeatableRead: IsolationLevel =
+    pub const REPEATABLE_READ: IsolationLevel =
         IsolationLevel(ffi::tidesdb_isolation_level_t::TDB_ISOLATION_REPEATABLE_READ);
-    pub const Snapshot: IsolationLevel =
+    pub const SNAPSHOT: IsolationLevel =
         IsolationLevel(ffi::tidesdb_isolation_level_t::TDB_ISOLATION_SNAPSHOT);
-    pub const Serializable: IsolationLevel =
+    pub const SERIALIZABLE: IsolationLevel =
         IsolationLevel(ffi::tidesdb_isolation_level_t::TDB_ISOLATION_SERIALIZABLE);
 }
 
@@ -88,15 +88,15 @@ impl IsolationLevel {
 pub struct CompressionAlgorithm(pub i32);
 
 impl CompressionAlgorithm {
-    pub const None: CompressionAlgorithm =
+    pub const NONE: CompressionAlgorithm =
         CompressionAlgorithm(ffi::compression_algorithm::TDB_COMPRESSION_NONE as i32);
-    pub const Snappy: CompressionAlgorithm =
+    pub const SNAPPY: CompressionAlgorithm =
         CompressionAlgorithm(ffi::compression_algorithm::TDB_COMPRESSION_SNAPPY as i32);
-    pub const Zlib: CompressionAlgorithm =
+    pub const ZLIB: CompressionAlgorithm =
         CompressionAlgorithm(ffi::compression_algorithm::TDB_COMPRESSION_ZLIB as i32);
-    pub const Zstd: CompressionAlgorithm =
+    pub const ZSTD: CompressionAlgorithm =
         CompressionAlgorithm(ffi::compression_algorithm::TDB_COMPRESSION_ZSTD as i32);
-    pub const Lz4: CompressionAlgorithm =
+    pub const LZ4: CompressionAlgorithm =
         CompressionAlgorithm(ffi::compression_algorithm::TDB_COMPRESSION_LZ4 as i32);
 }
 
@@ -181,7 +181,7 @@ impl Database {
     }
 
     pub fn begin_transaction(&self) -> Result<Transaction> {
-        self.begin_transaction_with_isolation(IsolationLevel::ReadCommitted)
+        self.begin_transaction_with_isolation(IsolationLevel::READ_COMMITTED)
     }
 
     pub fn begin_transaction_with_isolation(
@@ -189,9 +189,8 @@ impl Database {
         isolation: IsolationLevel,
     ) -> Result<Transaction> {
         let mut txn_ptr = ptr::null_mut();
-        let result = unsafe {
-            ffi::tidesdb_txn_begin_with_isolation(self.inner, isolation.0, &mut txn_ptr)
-        };
+        let result =
+            unsafe { ffi::tidesdb_txn_begin_with_isolation(self.inner, isolation.0, &mut txn_ptr) };
 
         if result != ffi::TDB_SUCCESS {
             return Err(Error::from_code(result));
@@ -262,9 +261,8 @@ impl ColumnFamilyConfig {
     }
 
     pub fn with_compression(mut self, algorithm: CompressionAlgorithm) -> Self {
-        self.inner.compression_algorithm = unsafe {
-            std::mem::transmute::<i32, ffi::compression_algorithm>(algorithm.0)
-        };
+        self.inner.compression_algorithm =
+            unsafe { std::mem::transmute::<i32, ffi::compression_algorithm>(algorithm.0) };
         self
     }
 

@@ -105,9 +105,8 @@ pub struct tidesdb_txn_t {
     _private: [u8; 0],
 }
 
-pub type skip_list_comparator_fn = Option<
-    unsafe extern "C" fn(*const u8, size_t, *const u8, size_t, *mut c_void) -> c_int,
->;
+pub type skip_list_comparator_fn =
+    Option<unsafe extern "C" fn(*const u8, size_t, *const u8, size_t, *mut c_void) -> c_int>;
 
 extern "C" {
     pub fn tidesdb_default_column_family_config() -> tidesdb_column_family_config_t;

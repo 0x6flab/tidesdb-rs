@@ -51,10 +51,7 @@ impl Error {
             -1 => Error::Memory,
             -2 => Error::InvalidArgs,
             -3 => Error::NotFound,
-            -4 => Error::Io(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                "TidesDB I/O error",
-            )),
+            -4 => Error::Io(std::io::Error::other("TidesDB I/O error")),
             -5 => Error::Corruption,
             -6 => Error::Exists,
             -7 => Error::Conflict,

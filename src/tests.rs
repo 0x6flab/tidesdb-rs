@@ -123,7 +123,7 @@ mod tests {
         let cf = db.get_column_family("test_cf").unwrap();
 
         let mut txn = db
-            .begin_transaction_with_isolation(IsolationLevel::Serializable)
+            .begin_transaction_with_isolation(IsolationLevel::SERIALIZABLE)
             .unwrap();
         txn.put(&cf, b"key1", b"value1").unwrap();
         txn.commit().unwrap();
@@ -134,8 +134,7 @@ mod tests {
     #[test]
     fn test_compression() {
         let db = setup_test_db("compression");
-        let cf_config =
-            ColumnFamilyConfig::new().with_compression(CompressionAlgorithm::Lz4);
+        let cf_config = ColumnFamilyConfig::new().with_compression(CompressionAlgorithm::LZ4);
         db.create_column_family("test_cf", &cf_config).unwrap();
         let cf = db.get_column_family("test_cf").unwrap();
 
@@ -149,8 +148,7 @@ mod tests {
     #[test]
     fn test_bloom_filter() {
         let db = setup_test_db("bloom");
-        let cf_config =
-            ColumnFamilyConfig::new().with_bloom_filter(true, 0.01);
+        let cf_config = ColumnFamilyConfig::new().with_bloom_filter(true, 0.01);
         db.create_column_family("test_cf", &cf_config).unwrap();
 
         teardown_test_db("bloom");

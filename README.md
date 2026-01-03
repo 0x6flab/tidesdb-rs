@@ -9,7 +9,7 @@ Rust wrapper for [TidesDB](https://github.com/tidesdb/tidesdb), a fast and effic
 When cloning this repository, use the `--recursive` flag to include the TidesDB submodule:
 
 ```bash
-git clone --recursive https://github.com/yourusername/tidesdb-rs.git
+git clone --recursive https://github.com/0x6flab/tidesdb-rs.git
 ```
 
 If you've already cloned without the `--recursive` flag:
@@ -25,21 +25,40 @@ To update the TidesDB submodule to the latest version:
 ```bash
 cd tidesdb
 git fetch origin
-git checkout origin/main
+git checkout origin/master
 cd ..
 git add tidesdb
 git commit -m "Update tidesdb submodule"
 ```
 
-## Features
+## Examples
 
-- **ACID Transactions**: Full transactional support with MVCC and 5 isolation levels (READ_UNCOMMITTED, READ_COMMITTED, REPEATABLE_READ, SNAPSHOT, SERIALIZABLE)
-- **Multi-Column Family**: Support for multiple column families with independent configurations
-- **Compression**: LZ4, Zstd, Snappy, and Zlib compression algorithms
-- **Bloom Filters**: Configurable bloom filters for efficient key existence checks
-- **TTL Support**: Automatic key-value expiration with TTL
-- **Thread-Safe**: Safe Rust API with Send + Sync traits for concurrent use
-- **Memory Safety**: Proper resource management with RAII patterns
+Check out the [examples directory](./examples/) for comprehensive examples demonstrating various features:
+
+- [basic.rs](./examples/basic.rs) - Simple put/get operations
+- [transactions.rs](./examples/transactions.rs) - Different isolation levels and rollback
+- [column_families.rs](./examples/column_families.rs) - Multiple column families
+- [ttl.rs](./examples/ttl.rs) - Time-to-live and key expiration
+- [savepoints.rs](./examples/savepoints.rs) - Transaction savepoints
+
+### Running Examples
+
+```bash
+# Run a specific example
+cargo run --example basic
+
+# Build all examples
+cargo build --examples
+
+# See all available examples
+ls examples/
+```
+
+For detailed instructions, see the [examples README](./examples/README.md).
+
+## [Features](https://github.com/tidesdb/tidesdb#features)
+
+The features of TidesDB-rs are the same as the [TidesDB C library](https://github.com/tidesdb/tidesdb#features).
 
 ## Installation
 
@@ -53,16 +72,19 @@ You need to following C libraries installed on your system:
 - `zlib1g-dev` (or `zlib-devel`)
 
 #### Ubuntu/Debian
+
 ```bash
 sudo apt-get install liblz4-dev libzstd-dev libsnappy-dev zlib1g-dev
 ```
 
 #### Fedora/RHEL
+
 ```bash
 sudo dnf install lz4-devel zstd-devel snappy-devel zlib-devel
 ```
 
 #### macOS
+
 ```bash
 brew install lz4 zstd snappy
 ```
@@ -72,31 +94,59 @@ brew install lz4 zstd snappy
 ### Basic Example
 
 ```rust
-use tidesdb_rs::{Config, Database, ColumnFamilyConfig};
+use std::fs;
+use tidesdb_rs::{ColumnFamilyConfig, Config, Database};
 
-// Open or create a database
-let config = Config::new("/path/to/db");
-let db = Database::open(config)?;
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let db_path = "example_db";
+    let _ = fs::remove_dir_all(db_path);
 
-// Create a column family
-let cf_config = ColumnFamilyConfig::new();
-db.create_column_family("my_cf", &cf_config)?;
+    let config = Config::new(db_path)?;
+    println!("Opening database at: {}", db_path);
+    let db = Database::open(config)?;
+    println!();
 
-// Get of column family
-let cf = db.get_column_family("my_cf")?;
+    let cf_config = ColumnFamilyConfig::new();
+    db.create_column_family("users", &cf_config)?;
+    println!("Created column family: users");
+    println!();
 
-// Write data
-let mut txn = db.begin_transaction()?;
-txn.put(&cf, b"key1", b"value1")?;
-txn.put(&cf, b"key2", b"value2")?;
-txn.commit()?;
+    let cf = db.get_column_family("users")?;
+    println!("Writing data...");
 
-// Read data
-let txn = db.begin_transaction()?;
-let value = txn.get(&cf, b"key1")?;
-assert_eq!(value, Some(b"value1".to_vec()));
+    let mut txn = db.begin_transaction()?;
+    txn.put(&cf, b"user:1", b"John Doe")?;
+    txn.put(&cf, b"user:2", b"Jane Smith")?;
+    txn.put(&cf, b"user:3", b"Bob Johnson")?;
+    txn.commit()?;
 
-# Ok::<(), Box<dyn std::error::Error>>(())
+    println!("Inserted 3 users");
+    println!();
+    println!("Reading data...");
+
+    let txn = db.begin_transaction()?;
+
+    if let Some(value) = txn.get(&cf, b"user:1")? {
+        println!("user:1 -> {}", String::from_utf8_lossy(&value));
+    }
+
+    if let Some(value) = txn.get(&cf, b"user:2")? {
+        println!("user:2 -> {}", String::from_utf8_lossy(&value));
+    }
+
+    if let Some(value) = txn.get(&cf, b"user:3")? {
+        println!("user:3 -> {}", String::from_utf8_lossy(&value));
+    }
+
+    match txn.get(&cf, b"user:999")? {
+        Some(_) => println!("user:999 -> Unexpectedly found!"),
+        None => println!("user:999 -> Not found (expected)"),
+    }
+
+    println!();
+    println!("Successfully demonstrated basic operations");
+    Ok(())
+}
 ```
 
 ### Transactions with Isolation Levels
@@ -186,6 +236,7 @@ cf.flush()?;
 ### Configuration Options
 
 #### Database Config
+
 - `new(path)` - Create config with database path
 - `with_log_level(level)` - Set logging level
 - `with_flush_threads(count)` - Set number of flush threads
@@ -194,6 +245,7 @@ cf.flush()?;
 - `with_max_open_sstables(count)` - Set max open SSTables
 
 #### Column Family Config
+
 - `new()` - Create default config
 - `with_compression(algo)` - Set compression algorithm
 - `with_bloom_filter(enabled, fpr)` - Enable bloom filter with false positive rate
@@ -232,54 +284,6 @@ This crate provides safe Rust wrappers around TidesDB C API:
 4. **Batch operations** in transactions to reduce overhead
 5. **Choose appropriate isolation level** - READ_COMMITTED is usually sufficient
 
-## Development
-
-### Building
-
-```bash
-cargo build
-```
-
-### Testing
-
-```bash
-cargo test
-```
-
-### Running Specific Tests
-
-```bash
-cargo test test_database_open
-```
-
-### Cloning for Development
-
-When cloning for development, always use `--recursive`:
-
-```bash
-git clone --recursive https://github.com/yourusername/tidesdb-rs.git
-cd tidesdb-rs
-cargo build
-```
-
-Or if you already cloned without `--recursive`:
-
-```bash
-git submodule update --init --recursive
-```
-
-## License
-
-This crate is licensed under a Mozilla Public License Version 2.0 (MPL-2.0), consistent with TidesDB C library.
-
-The underlying TidesDB library uses multiple licenses:
-
-- Mozilla Public License Version 2.0 (TidesDB)
-- BSD 3 Clause (Snappy)
-- BSD 2 (LZ4)
-- BSD 2 (xxHash)
-- BSD (Zstandard)
-
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
@@ -288,4 +292,3 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 - [TidesDB C Library](https://github.com/tidesdb/tidesdb)
 - [TidesDB Documentation](https://tidesdb.com/)
-- [TidesDB Discord](https://discord.gg/tWEmjR66cy)
