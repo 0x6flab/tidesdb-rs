@@ -16,13 +16,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     db.create_column_family("users", &users_cf)?;
     println!("Created 'users' (no compression)");
 
-    let products_cf = ColumnFamilyConfig::new()
-        .with_compression(tidesdb_rs::CompressionAlgorithm::LZ4);
+    let products_cf =
+        ColumnFamilyConfig::new().with_compression(tidesdb_rs::CompressionAlgorithm::LZ4);
     db.create_column_family("products", &products_cf)?;
     println!("Created 'products' (LZ4 compression)");
 
-    let logs_cf = ColumnFamilyConfig::new()
-        .with_bloom_filter(true, 0.01);
+    let logs_cf = ColumnFamilyConfig::new().with_bloom_filter(true, 0.01);
     db.create_column_family("logs", &logs_cf)?;
     println!("Created 'logs' (bloom filter, 1% FPR)");
 
@@ -62,7 +61,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     txn.put(&logs, b"log:2024-01-02", b"WARNING: High memory usage")?;
     println!("Added 2 log entries to 'logs' CF");
 
-    txn.put(&cache, b"cache:session:123", b"session_data|expires_in_3600")?;
+    txn.put(
+        &cache,
+        b"cache:session:123",
+        b"session_data|expires_in_3600",
+    )?;
     txn.put(&cache, b"cache:api:weather", b"temp:72,humidity:45")?;
     println!("Added 2 cache entries to 'cache' CF");
 
@@ -103,12 +106,24 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let products_data = txn2.get(&products, b"shared_key")?;
     let cache_data = txn2.get(&cache, b"shared_key")?;
 
-    println!("'shared_key' in users CF: {:?}", 
-             users_data.as_ref().map(|v| String::from_utf8_lossy(v.as_slice())));
-    println!("'shared_key' in products CF: {:?}", 
-             products_data.as_ref().map(|v| String::from_utf8_lossy(v.as_slice())));
-    println!("'shared_key' in cache CF: {:?}", 
-             cache_data.as_ref().map(|v| String::from_utf8_lossy(v.as_slice())));
+    println!(
+        "'shared_key' in users CF: {:?}",
+        users_data
+            .as_ref()
+            .map(|v| String::from_utf8_lossy(v.as_slice()))
+    );
+    println!(
+        "'shared_key' in products CF: {:?}",
+        products_data
+            .as_ref()
+            .map(|v| String::from_utf8_lossy(v.as_slice()))
+    );
+    println!(
+        "'shared_key' in cache CF: {:?}",
+        cache_data
+            .as_ref()
+            .map(|v| String::from_utf8_lossy(v.as_slice()))
+    );
     println!();
 
     println!("Successfully demonstrated column family features");

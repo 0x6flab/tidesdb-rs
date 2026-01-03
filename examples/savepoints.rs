@@ -49,9 +49,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let coins = txn.get(&cf, b"coins")?;
     println!(
         "  Current state: score={:?}, level={:?}, coins={:?}",
-        score.as_ref().map(|v| String::from_utf8_lossy(v.as_slice())),
-        level.as_ref().map(|v| String::from_utf8_lossy(v.as_slice())),
-        coins.as_ref().map(|v| String::from_utf8_lossy(v.as_slice()))
+        score
+            .as_ref()
+            .map(|v| String::from_utf8_lossy(v.as_slice())),
+        level
+            .as_ref()
+            .map(|v| String::from_utf8_lossy(v.as_slice())),
+        coins
+            .as_ref()
+            .map(|v| String::from_utf8_lossy(v.as_slice()))
     );
     println!();
 
@@ -96,8 +102,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let health = txn.get(&cf, b"health")?;
     println!(
         "  After rollback: position={:?}, health={:?}",
-        position.as_ref().map(|v| String::from_utf8_lossy(v.as_slice())),
-        health.as_ref().map(|v| String::from_utf8_lossy(v.as_slice()))
+        position
+            .as_ref()
+            .map(|v| String::from_utf8_lossy(v.as_slice())),
+        health
+            .as_ref()
+            .map(|v| String::from_utf8_lossy(v.as_slice()))
     );
     println!();
 
@@ -146,23 +156,33 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("  Final state:");
     println!(
         "    stage: {:?}",
-        stage.as_ref().map(|v| String::from_utf8_lossy(v.as_slice()))
+        stage
+            .as_ref()
+            .map(|v| String::from_utf8_lossy(v.as_slice()))
     );
     println!(
         "    data:1: {:?}",
-        data1.as_ref().map(|v| String::from_utf8_lossy(v.as_slice()))
+        data1
+            .as_ref()
+            .map(|v| String::from_utf8_lossy(v.as_slice()))
     );
     println!(
         "    data:2: {:?}",
-        data2.as_ref().map(|v| String::from_utf8_lossy(v.as_slice()))
+        data2
+            .as_ref()
+            .map(|v| String::from_utf8_lossy(v.as_slice()))
     );
     println!(
         "    data:3: {:?} (should be None - rolled back)",
-        data3.as_ref().map(|v| String::from_utf8_lossy(v.as_slice()))
+        data3
+            .as_ref()
+            .map(|v| String::from_utf8_lossy(v.as_slice()))
     );
     println!(
         "    recovery: {:?}",
-        recovery.as_ref().map(|v| String::from_utf8_lossy(v.as_slice()))
+        recovery
+            .as_ref()
+            .map(|v| String::from_utf8_lossy(v.as_slice()))
     );
     println!();
 
