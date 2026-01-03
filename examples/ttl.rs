@@ -38,7 +38,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Example 2: Immediate availability");
     let txn = db.begin_transaction()?;
 
-    let sessions = ["session:guest", "session:temp", "session:premium", "session:admin"];
+    let sessions = [
+        "session:guest",
+        "session:temp",
+        "session:premium",
+        "session:admin",
+    ];
     for session in &sessions {
         if let Some(value) = txn.get(&cf, session.as_bytes())? {
             println!("{} -> {}", session, String::from_utf8_lossy(&value));
@@ -100,7 +105,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     thread::sleep(Duration::from_secs(2));
     let txn = db.begin_transaction()?;
     if let Some(value) = txn.get(&cf, b"session:refreshable")? {
-        println!("After 2s: Still exists -> {}", String::from_utf8_lossy(&value));
+        println!(
+            "After 2s: Still exists -> {}",
+            String::from_utf8_lossy(&value)
+        );
     }
     println!();
 
@@ -113,7 +121,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     thread::sleep(Duration::from_secs(2));
     let txn3 = db.begin_transaction()?;
     if let Some(value) = txn3.get(&cf, b"session:refreshable")? {
-        println!("After 2s refresh: Still exists -> {}", String::from_utf8_lossy(&value));
+        println!(
+            "After 2s refresh: Still exists -> {}",
+            String::from_utf8_lossy(&value)
+        );
     } else {
         println!("After 2s refresh: Expired");
     }

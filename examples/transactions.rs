@@ -59,12 +59,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!();
 
     let before = db.begin_transaction()?.get(&cf, b"account:5")?;
-    println!("In-transaction, account:5 = {:?}", 
-             before.as_ref().map(|v| String::from_utf8_lossy(&v)));
+    println!(
+        "In-transaction, account:5 = {:?}",
+        before.as_ref().map(|v| String::from_utf8_lossy(&v))
+    );
 
     let after = db.begin_transaction()?.get(&cf, b"account:5")?;
-    println!("After rollback, account:5 = {:?}", 
-             after.as_ref().map(|v| String::from_utf8_lossy(&v)));
+    println!(
+        "After rollback, account:5 = {:?}",
+        after.as_ref().map(|v| String::from_utf8_lossy(&v))
+    );
     println!();
 
     println!("Example 5: Delete operation");
@@ -73,8 +77,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     txn.commit()?;
 
     let deleted = db.begin_transaction()?.get(&cf, b"account:2")?;
-    println!("After deletion, account:2 = {:?}", 
-             deleted.as_ref().map(|v| String::from_utf8_lossy(&v)));
+    println!(
+        "After deletion, account:2 = {:?}",
+        deleted.as_ref().map(|v| String::from_utf8_lossy(&v))
+    );
     println!();
 
     println!("Successfully demonstrated transaction features");
