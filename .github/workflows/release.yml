@@ -27,6 +27,7 @@ jobs:
 
       - &check-version-update
         name: Check version update in Cargo.toml
+        id: version-check
         run: |
           if [ "${{ github.event_name }}" == "pull_request" ]; then
             BASE_REF="${{ github.event.pull_request.base.sha }}"
@@ -36,11 +37,14 @@ jobs:
 
           if git diff "$BASE_REF" HEAD -- Cargo.toml | grep -qE '^[+-]version\s*='; then
             echo "✅ Cargo.toml version was updated"
+            echo "updated=true" >> $GITHUB_OUTPUT
           else
             echo "⚠️  Cargo.toml version was NOT updated - skipping release"
+            echo "updated=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Run release-plz
+        if: steps.version-check.outputs.updated == 'true'
         uses: release-plz/action@v0.5
         with:
           command: release
@@ -64,6 +68,7 @@ jobs:
       - *check-version-update
 
       - name: Run release-plz
+        if: steps.version-check.outputs.updated == 'true'
         uses: release-plz/action@v0.5
         with:
           command: release-pr
