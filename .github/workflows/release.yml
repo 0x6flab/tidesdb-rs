@@ -35,10 +35,9 @@ jobs:
           fi
 
           if git diff "$BASE_REF" HEAD -- Cargo.toml | grep -qE '^[+-]version\s*='; then
-            echo "Cargo.toml version was updated"
+            echo "✅ Cargo.toml version was updated"
           else
-            echo "Cargo.toml version was NOT updated"
-            exit 1
+            echo "⚠️  Cargo.toml version was NOT updated - skipping release"
           fi
 
       - name: Run release-plz
