@@ -364,7 +364,10 @@ impl Transaction {
             return Err(Error::from_code(result));
         }
 
-        let value = unsafe { Vec::from_raw_parts(value_ptr, value_size, value_size) };
+        let value = unsafe { std::slice::from_raw_parts(value_ptr, value_size) }.to_vec();
+        unsafe {
+            libc::free(value_ptr as *mut libc::c_void);
+        }
         Ok(Some(value))
     }
 
