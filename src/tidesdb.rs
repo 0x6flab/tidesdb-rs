@@ -5,6 +5,16 @@ use std::ptr;
 use crate::error::{Error, Result};
 use crate::ffi;
 
+unsafe fn copy_and_free_c_buffer(ptr: *mut u8, len: usize) -> Vec<u8> {
+    // SAFETY: `ptr` is allocated by the C API using `malloc` and is valid for `len` bytes.
+    // We copy into a Rust-owned `Vec` and free the original with `libc::free`,
+    // matching the allocator used by the C API.
+    let slice = std::slice::from_raw_parts(ptr, len);
+    let vec = slice.to_vec();
+    libc::free(ptr as *mut libc::c_void);
+    vec
+}
+
 pub struct Config {
     inner: ffi::tidesdb_config_t,
 }
@@ -364,10 +374,7 @@ impl Transaction {
             return Err(Error::from_code(result));
         }
 
-        let value = unsafe { std::slice::from_raw_parts(value_ptr, value_size) }.to_vec();
-        unsafe {
-            libc::free(value_ptr as *mut libc::c_void);
-        }
+        let value = unsafe { copy_and_free_c_buffer(value_ptr, value_size) };
         Ok(Some(value))
     }
 
