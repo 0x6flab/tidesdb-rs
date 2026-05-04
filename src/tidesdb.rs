@@ -49,6 +49,16 @@ impl Default for Config {
     }
 }
 
+impl Drop for Config {
+    fn drop(&mut self) {
+        if !self.inner.db_path.is_null() {
+            unsafe {
+                let _ = CString::from_raw(self.inner.db_path);
+            }
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct LogLevel(pub ffi::tidesdb_log_level_t);
 
