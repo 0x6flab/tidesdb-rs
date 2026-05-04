@@ -12,16 +12,9 @@ pub struct Config {
 impl Config {
     pub fn new<P: AsRef<Path>>(db_path: P) -> Result<Self> {
         let db_path = CString::new(db_path.as_ref().to_str().ok_or(Error::InvalidArgs)?)?;
-        Ok(Config {
-            inner: ffi::tidesdb_config_t {
-                db_path: db_path.into_raw(),
-                num_flush_threads: 2,
-                num_compaction_threads: 2,
-                log_level: ffi::tidesdb_log_level_t::TDB_LOG_INFO,
-                block_cache_size: 64 * 1024 * 1024,
-                max_open_sstables: 512,
-            },
-        })
+        let mut config = unsafe { ffi::tidesdb_default_config() };
+        config.db_path = db_path.into_raw();
+        Ok(Config { inner: config })
     }
 
     pub fn with_log_level(mut self, level: LogLevel) -> Self {
@@ -53,6 +46,16 @@ impl Config {
 impl Default for Config {
     fn default() -> Self {
         Self::new("tidesdb").unwrap()
+    }
+}
+
+impl Drop for Config {
+    fn drop(&mut self) {
+        if !self.inner.db_path.is_null() {
+            unsafe {
+                let _ = CString::from_raw(self.inner.db_path);
+            }
+        }
     }
 }
 
@@ -433,7 +436,7 @@ impl Transaction {
 
 impl Drop for Transaction {
     fn drop(&mut self) {
-        if !self.inner.is_null() && !self.committed {
+        if !self.inner.is_null() {
             unsafe {
                 ffi::tidesdb_txn_free(self.inner);
             }

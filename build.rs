@@ -6,12 +6,17 @@ fn main() {
 
     build
         .file("tidesdb/src/tidesdb.c")
+        .file("tidesdb/src/alloc.c")
         .file("tidesdb/src/block_manager.c")
         .file("tidesdb/src/bloom_filter.c")
+        .file("tidesdb/src/btree.c")
         .file("tidesdb/src/buffer.c")
         .file("tidesdb/src/clock_cache.c")
         .file("tidesdb/src/compress.c")
+        .file("tidesdb/src/local_cache.c")
         .file("tidesdb/src/manifest.c")
+        .file("tidesdb/src/objstore_fs.c")
+        .file("tidesdb/src/objstore_s3.c")
         .file("tidesdb/src/queue.c")
         .file("tidesdb/src/skip_list.c")
         .file("tidesdb/external/ini.c")
@@ -23,6 +28,7 @@ fn main() {
     #[cfg(target_os = "linux")]
     {
         build.flag("-pthread");
+        build.flag("-D_GNU_SOURCE");
     }
 
     build.compile("tidesdb");
