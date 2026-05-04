@@ -48,6 +48,12 @@ pub enum compression_algorithm {
     TDB_COMPRESSION_LZ4 = 4,
 }
 
+pub type skip_list_comparator_fn =
+    Option<unsafe extern "C" fn(*const u8, size_t, *const u8, size_t, *mut c_void) -> c_int>;
+
+pub type tidesdb_commit_hook_fn =
+    Option<unsafe extern "C" fn(ops: *const c_void, num_ops: c_int, ctx: *mut c_void) -> c_int>;
+
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct tidesdb_config_t {
@@ -57,11 +63,24 @@ pub struct tidesdb_config_t {
     pub log_level: tidesdb_log_level_t,
     pub block_cache_size: size_t,
     pub max_open_sstables: size_t,
+    pub log_to_file: c_int,
+    pub log_truncation_at: size_t,
+    pub max_memory_usage: size_t,
+    pub unified_memtable: c_int,
+    pub unified_memtable_write_buffer_size: size_t,
+    pub unified_memtable_skip_list_max_level: c_int,
+    pub unified_memtable_skip_list_probability: f32,
+    pub unified_memtable_sync_mode: c_int,
+    pub unified_memtable_sync_interval_us: u64,
+    pub object_store: *mut c_void,
+    pub object_store_config: *mut c_void,
+    pub max_concurrent_flushes: c_int,
 }
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct tidesdb_column_family_config_t {
+    pub name: [c_char; 128],
     pub write_buffer_size: size_t,
     pub level_size_ratio: size_t,
     pub min_levels: c_int,
@@ -77,7 +96,7 @@ pub struct tidesdb_column_family_config_t {
     pub sync_interval_us: u64,
     pub comparator_name: [c_char; 64],
     pub comparator_ctx_str: [c_char; 256],
-    pub comparator_fn_cached: Option<skip_list_comparator_fn>,
+    pub comparator_fn_cached: skip_list_comparator_fn,
     pub comparator_ctx_cached: *mut c_void,
     pub skip_list_max_level: c_int,
     pub skip_list_probability: f32,
@@ -85,6 +104,14 @@ pub struct tidesdb_column_family_config_t {
     pub min_disk_space: u64,
     pub l1_file_count_trigger: c_int,
     pub l0_queue_stall_threshold: c_int,
+    pub tombstone_density_trigger: f64,
+    pub tombstone_density_min_entries: u64,
+    pub use_btree: c_int,
+    pub commit_hook_fn: tidesdb_commit_hook_fn,
+    pub commit_hook_ctx: *mut c_void,
+    pub object_target_file_size: size_t,
+    pub object_lazy_compaction: c_int,
+    pub object_prefetch_compaction: c_int,
 }
 
 #[repr(C)]
@@ -104,9 +131,6 @@ pub struct tidesdb_column_family_t {
 pub struct tidesdb_txn_t {
     _private: [u8; 0],
 }
-
-pub type skip_list_comparator_fn =
-    Option<unsafe extern "C" fn(*const u8, size_t, *const u8, size_t, *mut c_void) -> c_int>;
 
 extern "C" {
     pub fn tidesdb_default_column_family_config() -> tidesdb_column_family_config_t;
